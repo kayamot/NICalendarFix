@@ -54,7 +54,14 @@ var changelayout =function(){
       
       //時間の取得
       var time1 = s.getElementsByClassName('cuiEvTime')
-      timetext = time1[0].innerText
+      
+      //バグ修正 イベントの場合は時間が取れない
+      try{
+        timetext = time1[0].innerText
+      } catch(e){
+        timetext = '00:00～24:00'
+      }
+      
       starttimetext = timetext.substr(0,timetext.indexOf('～'))
       endtimetext = timetext.substr(timetext.indexOf('～') + 1)
       //console.log(starttimetext + ' ' + endtimetext)
