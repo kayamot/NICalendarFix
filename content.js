@@ -307,6 +307,18 @@ var addbutton = function(){
   
   newbutton2.after(newbutton1)
   button1.after(newbutton2)
+  
+  //グループ編集ボタン追加
+  var button2vt = document.getElementsByClassName('vt')[11]
+  var button2 = button2vt.getElementsByClassName('button2')[0]
+  var newlinkbutton = document.createElement("button")
+  
+  newlinkbutton.type = 'button'
+  newlinkbutton.classList.add('button2')
+  newlinkbutton.id = 'newlinkbutton'
+  newlinkbutton.setAttribute('onclick', "window.open('https://niconsul.com/ynnifqdx/ni/nisystem/option/index.php?p=listmygroup', '_blank')");
+  newlinkbutton.innerText = 'マイグループの編集'
+  button2.after(newlinkbutton)
 }
 
 //グループ週表示判定
@@ -326,7 +338,6 @@ var drawTimeline = function(){
     const monthrow = document.getElementsByClassName('month-row')[0]
     const todaystc = monthrow.getElementsByClassName('st-c')[todaynum-1]
     
-    console.log()
     //時間割合の作成
     let d = new Date()
     let dmin = d.getHours() * 60 + d.getMinutes()
@@ -334,8 +345,6 @@ var drawTimeline = function(){
     //縦幅
     let gridheight = document.getElementsByClassName('gridContainer')[0].offsetHeight
     let weektopheight = document.getElementsByClassName('gwk-weektop')[0].offsetHeight
-    console.log(gridheight)
-    console.log(weektopheight)
     let lineheight = gridheight - weektopheight
     
     //線Elementの作成

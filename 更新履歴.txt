@@ -2,6 +2,7 @@ NICollaboのグループカレンダー週表示の表示改善
 要望・バグ報告はこちらへ
 https://docs.google.com/spreadsheets/d/1-F3DbJJFA5gCvBQZqUUo-eC_S4B4-AJ0NrfxRFwNodA/edit?usp=sharing
 
+1.2.2　「マイグループ編集」ボタンの追加
 1.2.1　予定の分数が予定位置に影響していなかったバグの修正
 1.2.0　時間軸追加しました！本日が含まれる場合、ページ更新時の時間が赤線表示されます
 1.1.5　一度グループ週表示を押さないと反映されないバグの修正
