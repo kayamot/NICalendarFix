@@ -9,6 +9,8 @@ window.onload = function() {
     addbutton()
     changelayout()
     removeElement()
+    //時間線の作成
+    drawTimeline()
   }
 }
 
@@ -36,6 +38,7 @@ var switchdisplay = function(){
   }
   else{
     changelayout()
+    drawTimeline()
     changeflag = 1
   }
 }
@@ -141,7 +144,7 @@ var changelayout =function(){
       
       //位置を変える
       s.style.position = 'absolute'
-      var leftposition = starttime.getHours() /24 * 100
+      var leftposition = (starttime.getHours() + (starttime.getMinutes()/60)) /24 * 100
       s.style.left = leftposition + '%'
       
       //ダミー全部消えないので無理やりかぶったところも上側に持ってくる
@@ -173,6 +176,7 @@ var changelayout =function(){
   //ボタン活性化
   var newbutton1 = document.getElementById('newbutton1')
   newbutton1.disabled = false
+  
 }
 
 //いらない要素の削除 初回のみ
@@ -237,9 +241,15 @@ var reverseToDefault = function(){
     s.style.backgroundImage = ''
     s.style.backgroundSize = ''
   }
+  
+  //線消す
+  if(document.getElementsByClassName('todayline')[0] !== undefined){
+    document.getElementsByClassName('todayline')[0].remove()
+  }
    //ボタン非活性化
   var newbutton1 = document.getElementById('newbutton1')
   newbutton1.disabled = true
+  
 }
 
 //幅変更 2回目クリックは戻す
@@ -298,3 +308,47 @@ var addbutton = function(){
   newbutton2.after(newbutton1)
   button1.after(newbutton2)
 }
+
+//グループ週表示判定
+var drawTimeline = function(){
+  //todayを探す
+  let todaynum 
+  const gwkdayname = document.getElementsByClassName('gwk-daynames')[0]
+  for(let i=0; i<8;i++){
+    //○列目がtodayの場合数値保存
+    if(gwkdayname.children[i].getElementsByClassName('today')[0] !== undefined){
+      todaynum = i;
+    }
+  }
+  
+  //本日が含まれている場合に線の追加
+  if(todaynum !== undefined){
+    const monthrow = document.getElementsByClassName('month-row')[0]
+    const todaystc = monthrow.getElementsByClassName('st-c')[todaynum-1]
+    
+    console.log()
+    //時間割合の作成
+    let d = new Date()
+    let dmin = d.getHours() * 60 + d.getMinutes()
+    let dminratio = dmin/60/24*100
+    //縦幅
+    let gridheight = document.getElementsByClassName('gridContainer')[0].offsetHeight
+    let weektopheight = document.getElementsByClassName('gwk-weektop')[0].offsetHeight
+    console.log(gridheight)
+    console.log(weektopheight)
+    let lineheight = gridheight - weektopheight
+    
+    //線Elementの作成
+    let todayline = document.createElement("div")
+    todayline.classList.add('todayline')
+    todayline.style.position ='absolute'
+    todayline.style.border ='1px solid red'
+    todayline.style.height = lineheight +'px'
+    todayline.style.left = dminratio + '%'
+    todayline.style.zIndex ='3'
+    todayline.style.opacity =0.5
+    
+    todaystc.appendChild(todayline)
+  }
+}
+
