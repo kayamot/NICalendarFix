@@ -1,10 +1,10 @@
 {
   "name": "NICalendarFix",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "manifest_version": 3,
   "description": "私的利用に限る",
   "content_scripts": [{
-    "matches": ["https://niconsul.com/ynnifqdx/ni/niware/schedule*groupweekly*"],
+    "matches": ["https://niconsul.com/ynnifqdx/ni/niware/schedule*"],
     "js": [
       "content.js"
     ]

@@ -3,9 +3,25 @@ var widthflag = 0
 
 //読み込み時1回実行
 window.onload = function() {
-  addbutton()
-  changelayout()
-  removeElement()
+  
+  //グループ週表示なら
+  if(isGroupweekly()){
+    addbutton()
+    changelayout()
+    removeElement()
+  }
+}
+
+//グループ週表示判定
+var isGroupweekly = function(){
+  //2番目のtabbox
+  var tabbox = document.getElementsByClassName('tabbox')
+  var activetab = tabbox[1].getElementsByClassName('tabActive')
+  if(activetab[0].textContent == 'グループ週表示'){
+    return true
+  }else{
+    return false
+  }
 }
 
 //表示方法切り替え
