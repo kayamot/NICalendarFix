@@ -119,7 +119,6 @@ var changelayout =function(){
   //会議の場合月曜日に合わせる
   if(isReserve()){
     firstdate.setDate(firstdate.getDate() - (firstdate.getDay() - 1))
-    console.log(firstdate+' '+firstdatetext)
   }
   var lastdate = new Date(firstdate.getTime())
   lastdate.setDate(lastdate.getDate() + 7)
@@ -230,11 +229,12 @@ var changelayout =function(){
 
       //zindexを上げる(1-4)
       var zindexnum = Math.max(1,Math.round(4 - diffHours))
-      if(zindexnum !== NaN){
+      if(zindexnum >= 1 && zindexnum <= 4){
         s.style.zIndex = zindexnum
       } else{
-        s.style.zIndex = 0
+        s.style.zIndex = 1
       }
+
     }
   }
   //最低高さ100px制限の削除
@@ -435,7 +435,6 @@ var addbutton = function(){
   var button2
   var buttontext
   var buttonlink
-  console.log(document.getElementsByClassName('scl_tc_group'))
   if(isSchedule()){
     button2vt = document.getElementsByClassName('vt')[11]
     button2 = button2vt.getElementsByClassName('button2')[0]
