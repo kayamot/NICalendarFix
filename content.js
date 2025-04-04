@@ -1,16 +1,21 @@
-var changeflag = 1
+var changeflag = 0
 var widthflag = 0
-
+var firstflag = 1
 //読み込み時1回実行
 window.onload = function() {
   
   //グループ週表示なら
   if(isGroupweekly()){
     addbutton()
-    changelayout()
-    removeElement()
-    //時間線の作成
-    drawTimeline()
+    addmouseover()
+    if(isSchedule()){
+      changeflag = 1
+      firstflag = 0
+      removeElement()
+      changelayout()
+      //時間線の作成
+      drawTimeline()
+    }
   }
 }
 
@@ -19,15 +24,22 @@ var isGroupweekly = function(){
   //2番目のtabbox
   var tabbox = document.getElementsByClassName('tabbox')
   var activetab = tabbox[1].getElementsByClassName('tabActive')
-  if(activetab[0].textContent == 'グループ週表示'){
-    return true
-  }else{
-    return false
-  }
+  return activetab[0].textContent == 'グループ週表示'
+}
+
+//スケジュール判定
+var isSchedule = function(){
+  return location.href.includes('schedule')
+}
+
+//設備予約判定
+var isReserve = function(){
+  return location.href.includes('reserve')
 }
 
 //表示方法切り替え
 var switchdisplay = function(){
+  //初回のみelement削除
   if(changeflag == 1){
     //幅変えてたらもどす
     if(widthflag == 1){
@@ -37,22 +49,84 @@ var switchdisplay = function(){
     changeflag = 0
   }
   else{
+    if(firstflag == 1){
+      removeElement()
+      firstflag = 0
+    }
     changelayout()
     drawTimeline()
     changeflag = 1
   }
 }
 
+//マウスオーバーで色変更
+var addmouseover = function(){
+  //全スケジュール取得
+  var monthrows=document.getElementsByClassName('month-row')
+  
+  //1件ごと予定処理
+  for(const s of monthrows){
+  s.addEventListener('mouseover', () => {
+      var stcuser=s.getElementsByClassName('st-c-user')[0]
+      stcuser.style.background='gray'
+  });
+  s.addEventListener('mouseout', () => {
+      var stcuser=s.getElementsByClassName('st-c-user')[0]
+      stcuser.style.background='white'
+});
+  }
+}
+
 //レイアウト変更
 var changelayout =function(){
-  
+
+  //名称の幅
+  if(isReserve()){
+    var usernames = document.getElementsByClassName('st-username')
+    for (var s of usernames){
+      s.title = s.textContent
+      s.style.maxHeight = '30.25px'
+      s.style.whiteSpace = 'nowrap'; 
+      s.style.overflow = 'visible'; 
+    }
+  }
+
+  //列固定
+  var stcusers = document.getElementsByClassName('st-c-user')
+  for (var s of stcusers){
+    s.style.position = 'sticky'
+    s.style.left = '0px'
+    s.style.zIndex = '5'
+    s.style.background = 'white'
+    if(isReserve()){
+      s.style.width='300px'
+    }
+  }
+  var userdatadummy = document.getElementsByClassName('gwk-userdata-dummy')
+  for (var s of userdatadummy){
+    s.style.position = 'sticky'
+    s.style.left = '0px'
+    s.style.zIndex = '6'
+    if(isReserve()){
+      s.style.width='300px'
+    }
+  }
+
   //日付取得
   var firstdatetext = document.getElementsByClassName('sc_dateselecter')
   var firstdate = new Date(firstdatetext[0].value)
   firstdate.setHours(0,0,0,0)
+  //会議の場合月曜日に合わせる
+  if(isReserve()){
+    firstdate.setDate(firstdate.getDate() - (firstdate.getDay() - 1))
+    console.log(firstdate+' '+firstdatetext)
+  }
+  var lastdate = new Date(firstdate.getTime())
+  lastdate.setDate(lastdate.getDate() + 7)
+
   //あとから取得の予定が全部勝手に2001年になるため なんで？
   firstdate.setYear(2001)
-
+  lastdate.setYear(2001)
   //全スケジュール取得
   var schedule1=document.getElementsByClassName('cuiEv')
   
@@ -88,7 +162,7 @@ var changelayout =function(){
       //日跨ぎの場合
       starttime = new Date(starttimetext)
       endtime = new Date(endtimetext)
-      
+
       //終日の場合
       if(endtimetext == '終日'){
        starttime = new Date()
@@ -97,7 +171,7 @@ var changelayout =function(){
        endtime.setDate(endtime.getDate() + 1)
        endtime.setHours(0,0,0,0)
       }
-      
+
       //日中の場合
       if (isNaN(starttime.getDate())){
         starttime = new Date()
@@ -112,14 +186,15 @@ var changelayout =function(){
           endtimehours = 24
         }
         endtime.setHours(endtimehours,endtimeminutes,0,0)
+      }else{
+        if(endtime > lastdate){
+          endtime = lastdate
+        }
       }
-      
       //バグ修正 1日目の前日からの予定が次の日跨ぎへ移動してしまう
       if(starttime < firstdate){
-        //console.log(starttime+' '+firstdate)
         starttime = firstdate
       }
-      
       //間の時間計算
       var diffMilliSec = endtime - starttime
       var diffHours = diffMilliSec / 1000 / 60 / 60
@@ -139,7 +214,7 @@ var changelayout =function(){
       }
       
       //列幅を変える
-      widthpercent = diffHours / 24 * 100
+      widthpercent = Math.min(diffHours / 24 * 100 , 700)
       s.style.width = widthpercent + '%'
       
       //位置を変える
@@ -152,6 +227,14 @@ var changelayout =function(){
       
       //1行目をなくす
       line1[0].style.height = '0px'
+
+      //zindexを上げる(1-4)
+      var zindexnum = Math.max(1,Math.round(4 - diffHours))
+      if(zindexnum !== NaN){
+        s.style.zIndex = zindexnum
+      } else{
+        s.style.zIndex = 0
+      }
     }
   }
   //最低高さ100px制限の削除
@@ -197,11 +280,50 @@ var removeElement = function(){
     //末尾のリンク
     const lastItem = s.children[1];
     lastItem.remove()
+
+    //定員メモ
+    if(isReserve()){
+      var note=s.getElementsByClassName('ud-note')
+      for(var ss of note){
+        ss.remove()
+      }
+    }
   }
 }
 
 //レイアウトもとに戻す
 var reverseToDefault = function(){
+
+  //名称の幅
+  if(isReserve()){
+    var usernames = document.getElementsByClassName('st-username')
+    for (var s of usernames){
+      s.style.maxHeight = ''
+      s.style.whiteSpace = 'normal'; 
+      s.style.overflow = ''; 
+      s.title = ''
+    }
+  }
+  //列固定
+  var stcusers = document.getElementsByClassName('st-c-user')
+  for (var s of stcusers){
+    s.style.position = ''
+    s.style.left = ''
+    s.style.zIndex = ''
+    s.style.background = ''
+    if(isReserve()){
+      s.style.width=''
+    }
+  }
+  var userdatadummy = document.getElementsByClassName('gwk-userdata-dummy')
+  for (var s of userdatadummy){
+    s.style.position = ''
+    s.style.left = ''
+    s.style.zIndex = ''
+    if(isReserve()){
+      s.style.width=''
+    }
+  }
   //全スケジュール取得
   var schedule1=document.getElementsByClassName('cuiEv')
   
@@ -308,17 +430,43 @@ var addbutton = function(){
   newbutton2.after(newbutton1)
   button1.after(newbutton2)
   
-  //グループ編集ボタン追加
-  var button2vt = document.getElementsByClassName('vt')[11]
-  var button2 = button2vt.getElementsByClassName('button2')[0]
+  //グループ編集ボタン追加 ※スケジュールのみ
+  var button2vt
+  var button2
+  var buttontext
+  var buttonlink
+  console.log(document.getElementsByClassName('scl_tc_group'))
+  if(isSchedule()){
+    button2vt = document.getElementsByClassName('vt')[11]
+    button2 = button2vt.getElementsByClassName('button2')[0]
+    buttontext = '会議室/Zoom予約'
+    buttonlink = "window.open('https://niconsul.com/ynnifqdx/ni/niware/reserve/index.php?p=list&m=groupweekly&i_region&ic_id=2')"
+    }
+  if(isReserve()){
+    button2vt = document.getElementsByClassName('scl_tc_group')[0]
+    button2 = button2vt.getElementsByClassName('button2')[0]
+    buttontext = 'スケジュール'
+    buttonlink = "window.open('https://niconsul.com/ynnifqdx/ni/niware/schedule/index.php')"
+  }
+  var groupeditbutton = document.createElement("button")
+  
+  groupeditbutton.type = 'button'
+  groupeditbutton.classList.add('button2')
+  groupeditbutton.id = 'newlinkbutton'
+  groupeditbutton.setAttribute('onclick', "window.open('https://niconsul.com/ynnifqdx/ni/nisystem/option/index.php?p=listmygroup', '_blank')");
+  groupeditbutton.innerText = 'マイグループの編集'
+  button2.after(groupeditbutton)
+  
+  //会議室リンクボタン追加
   var newlinkbutton = document.createElement("button")
   
   newlinkbutton.type = 'button'
   newlinkbutton.classList.add('button2')
   newlinkbutton.id = 'newlinkbutton'
-  newlinkbutton.setAttribute('onclick', "window.open('https://niconsul.com/ynnifqdx/ni/nisystem/option/index.php?p=listmygroup', '_blank')");
-  newlinkbutton.innerText = 'マイグループの編集'
-  button2.after(newlinkbutton)
+  newlinkbutton.setAttribute('onclick', buttonlink);
+  newlinkbutton.innerText = buttontext
+  groupeditbutton.after(newlinkbutton)
+
 }
 
 //グループ週表示判定
@@ -354,7 +502,7 @@ var drawTimeline = function(){
     todayline.style.border ='1px solid red'
     todayline.style.height = lineheight +'px'
     todayline.style.left = dminratio + '%'
-    todayline.style.zIndex ='3'
+    todayline.style.zIndex ='5'
     todayline.style.opacity =0.5
     
     todaystc.appendChild(todayline)
