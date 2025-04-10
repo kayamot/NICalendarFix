@@ -114,18 +114,23 @@ var changelayout =function(){
 
   //日付取得
   var firstdatetext = document.getElementsByClassName('sc_dateselecter')
+  //カレンダー左端の日付
   var firstdate = new Date(firstdatetext[0].value)
   firstdate.setHours(0,0,0,0)
   //会議の場合月曜日に合わせる
   if(isReserve()){
     firstdate.setDate(firstdate.getDate() - (firstdate.getDay() - 1))
   }
+  //あとから取得の予定が全部勝手に2001年になるため なんで？
+  firstdate.setYear(2001)
+
+  //カレンダー右端の日付
   var lastdate = new Date(firstdate.getTime())
   lastdate.setDate(lastdate.getDate() + 7)
 
   //あとから取得の予定が全部勝手に2001年になるため なんで？
   firstdate.setYear(2001)
-  lastdate.setYear(2001)
+
   //全スケジュール取得
   var schedule1=document.getElementsByClassName('cuiEv')
   
@@ -147,52 +152,99 @@ var changelayout =function(){
       //時間の取得
       var time1 = s.getElementsByClassName('cuiEvTime')
       
-      //バグ修正 イベントの場合は時間が取れない
+      /*
+      timetextのパターン
+      1.時間のみ
+      08:00～11:00
+
+      2.日跨ぎ
+      4/10 23:00 ～ 4/11 02:00
+
+      3.終日
+      終日
+
+      4.日跨ぎ終日
+      終日4/9 ～ 4/11
+
+      5.なし　※イベント
+
+      6.時間のみ（間隔なし）
+      18:00
+
+      */
+
+      //timetextの取得
       try{
         timetext = time1[0].innerText
       } catch(e){
+        //5.なし
         timetext = '00:00～24:00'
       }
-      
-      starttimetext = timetext.substr(0,timetext.indexOf('～'))
-      endtimetext = timetext.substr(timetext.indexOf('～') + 1)
-      //console.log(starttimetext + ' ' + endtimetext)
-      
-      //日跨ぎの場合
-      starttime = new Date(starttimetext)
-      endtime = new Date(endtimetext)
-
-      //終日の場合
-      if(endtimetext == '終日'){
-       starttime = new Date()
-       starttime.setHours(0,0,0,0)
-       endtime = new Date()
-       endtime.setDate(endtime.getDate() + 1)
-       endtime.setHours(0,0,0,0)
-      }
-
-      //日中の場合
-      if (isNaN(starttime.getDate())){
-        starttime = new Date()
-        starttimehours =  starttimetext.substr(0,starttimetext.indexOf(':'))
-        starttimeminutes = starttimetext.substr(starttimetext.indexOf(':') + 1)
-        starttime.setHours(starttimehours,starttimeminutes,0,0)
-        
-        endtime = new Date()
-        endtimehours =  endtimetext.substr(0,endtimetext.indexOf(':'))
-        endtimeminutes = endtimetext.substr(endtimetext.indexOf(':') + 1)
-        if(endtimehours == '00'){
-          endtimehours = 24
+            
+      //日付（"/"）がある場合
+      if(timetext.includes('/')){
+        if(timetext.includes('終日')){
+          //4.日またぎ終日
+          starttimetext = timetext.substr(0,timetext.indexOf('～')).replace('終日','')
+          endtimetext = timetext.substr(timetext.indexOf('～') + 1)
+          starttime = new Date(starttimetext)
+          endtime = new Date(endtimetext)
+          //一日分加算
+          endtime.setHours(24)
+        } else{
+          //2.日跨ぎ
+          starttimetext = timetext.substr(0,timetext.indexOf('～'))
+          endtimetext = timetext.substr(timetext.indexOf('～') + 1)
+          starttime = new Date(starttimetext)
+          endtime = new Date(endtimetext)
         }
-        endtime.setHours(endtimehours,endtimeminutes,0,0)
-      }else{
+        //年またぎ
+        if(starttime > endtime){
+          endtime.setFullYear(endtime.getFullYear() + 1)
+        }
+        //前後のはみ出し対策
+        if(starttime < firstdate){
+          starttime = firstdate
+        }
         if(endtime > lastdate){
           endtime = lastdate
         }
-      }
-      //バグ修正 1日目の前日からの予定が次の日跨ぎへ移動してしまう
-      if(starttime < firstdate){
-        starttime = firstdate
+      } else if(timetext.includes('終日')){
+        //3.終日
+        starttime = new Date()
+        starttime.setHours(0,0,0,0)
+        endtime = new Date(starttime.getTime())
+        //一日分加算
+        endtime.setHours(24)
+      } else {
+        if(timetext.includes('～')){
+          //1.時間のみ
+          starttimetext = timetext.substr(0,timetext.indexOf('～'))
+          endtimetext = timetext.substr(timetext.indexOf('～') + 1)
+
+          starttime = new Date()
+          starttimehours =  starttimetext.substr(0,starttimetext.indexOf(':'))
+          starttimeminutes = starttimetext.substr(starttimetext.indexOf(':') + 1)
+          starttime.setHours(starttimehours,starttimeminutes,0,0)
+          
+          endtime = new Date()
+          endtimehours =  endtimetext.substr(0,endtimetext.indexOf(':'))
+          endtimeminutes = endtimetext.substr(endtimetext.indexOf(':') + 1)
+          if(endtimehours == '00'){
+            endtimehours = 24
+          }
+          endtime.setHours(endtimehours,endtimeminutes,0,0)
+        }else{
+          //6.時間のみ（間隔なし）
+          starttimetext = timetext
+          starttime = new Date()
+          starttimehours =  Number(starttimetext.substr(0,starttimetext.indexOf(':')))
+          starttimeminutes = Number(starttimetext.substr(starttimetext.indexOf(':') + 1))
+          starttime.setHours(starttimehours,starttimeminutes,0,0)
+          
+          endtime = new Date(starttime.getTime())
+          endtime.setHours(starttimehours,starttimeminutes + 30,0,0)
+        }
       }
       //間の時間計算
       var diffMilliSec = endtime - starttime
@@ -215,7 +267,7 @@ var changelayout =function(){
       //列幅を変える
       widthpercent = Math.min(diffHours / 24 * 100 , 700)
       s.style.width = widthpercent + '%'
-      
+
       //位置を変える
       s.style.position = 'absolute'
       var leftposition = (starttime.getHours() + (starttime.getMinutes()/60)) /24 * 100
@@ -503,7 +555,8 @@ var drawTimeline = function(){
     todayline.style.left = dminratio + '%'
     todayline.style.zIndex ='5'
     todayline.style.opacity =0.5
-    
+    todayline.style.pointerEvents = 'none'
+
     todaystc.appendChild(todayline)
   }
 }

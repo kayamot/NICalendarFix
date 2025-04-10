@@ -2,6 +2,7 @@ NICollaboのグループカレンダー週表示の表示改善
 要望・バグ報告はこちらへ
 https://docs.google.com/spreadsheets/d/1-F3DbJJFA5gCvBQZqUUo-eC_S4B4-AJ0NrfxRFwNodA/edit?usp=sharing
 
+2.0.4　表示切替時スケジュール幅が変になるバグの修正
 2.0.3　会議室/Zoom予約にも対応！自動で切り替えはしません
 会議室/Zoomに飛べるボタンの追加
 マウスが乗った名前を強調する機能の追加
